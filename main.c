@@ -91,15 +91,38 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  //---------------------------------------
   //TASK1
   //int x = 42;
   //float y = 3.14;
-  
-  int a=5;
-  int b=7;
+  //---------------------------------------
+  //TASK2
+  // int a=5;
+  // int b=7;
 
-  int LHS=(a+b)*(a+b);
-  int RHS=(a*a)+(b*b)+(2*a*b);
+  // int LHS=(a+b)*(a+b);
+  // int RHS=(a*a)+(b*b)+(2*a*b);
+  //---------------------------------------
+  //TASK3
+    char str[]="Microcontrollers";
+    int key=10326;
+    int shift=key%256; // 10326 % 256 = 86
+
+    char encrypted[50];
+    char decrypted[50];
+    int i;
+
+    for(i=0;str[i]!='\0';i++){
+      encrypted[i]=str[i]+shift;
+    }
+    encrypted[i]='\0';
+
+    
+    
+    for(i=0;encrypted[i]!='\0';i++){
+      decrypted[i]=encrypted[i]-shift;
+    }
+    decrypted[i]='\0';
 
   /* USER CODE END 1 */
 
@@ -136,26 +159,35 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+    //-----------------------------------------------------------------
     //TASK1
     //myPrintf("Value of x= %d,y= %.2f \r\n", x, y);
-    myPrintf("Verifying identity (a + b)^2 = a^2 + 2ab + b^2\r\n");
-    myPrintf("a = %d, b = %d\r\n", a, b);
-    myPrintf("LHS = %d\r\n", LHS);
-    myPrintf("RHS = %d\r\n", RHS);
 
-    if (LHS == RHS)
-    {
-        myPrintf("Result: Identity holds \r\n");
-    }
-    else
-    {
-        myPrintf("Result: Identity does NOT hold \r\n");
-    }
+    //-----------------------------------------------------------------
+    //TASK2
+    // myPrintf("Verifying identity (a + b)^2 = a^2 + 2ab + b^2\r\n");
+    // myPrintf("a = %d, b = %d\r\n", a, b);
+    // myPrintf("LHS = %d\r\n", LHS);
+    // myPrintf("RHS = %d\r\n", RHS);
+
+    // if (LHS == RHS)
+    // {
+    //     myPrintf("Result: Identity holds \r\n");
+    // }
+    // else
+    // {
+    //     myPrintf("Result: Identity does NOT hold \r\n");
+    // }
+
+    //-----------------------------------------------------------------
+    //TASK3
+    myPrintf("Encrypted string: %s\r\n", encrypted);
+    myPrintf("Decrypted string: %s\r\n", decrypted);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
-
+//mci_aimanandzaina
 /**
   * @brief System Clock Configuration
   * @retval None
