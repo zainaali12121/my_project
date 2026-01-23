@@ -104,25 +104,54 @@ int main(void)
   // int RHS=(a*a)+(b*b)+(2*a*b);
   //---------------------------------------
   //TASK3
-    char str[]="Microcontrollers";
-    int key=10326;
-    int shift=key%256; // 10326 % 256 = 86
+  // char str[]="Microcontrollers";
+  // int key=10326;
+  // int shift=key%256; // 10326 % 256 = 86
 
-    char encrypted[50];
-    char decrypted[50];
-    int i;
+  // char encrypted[50];
+  // char decrypted[50];
+  // int i;
 
-    for(i=0;str[i]!='\0';i++){
-      encrypted[i]=str[i]+shift;
-    }
-    encrypted[i]='\0';
+  // for(i=0;str[i]!='\0';i++){
+  //   encrypted[i]=str[i]+shift;
+  // }
+  // encrypted[i]='\0';
 
-    
-    
-    for(i=0;encrypted[i]!='\0';i++){
-      decrypted[i]=encrypted[i]-shift;
-    }
-    decrypted[i]='\0';
+  
+  
+  // for(i=0;encrypted[i]!='\0';i++){
+  //   decrypted[i]=encrypted[i]-shift;
+  // }
+  // decrypted[i]='\0';
+  //---------------------------------------
+  //TASK4
+  int A[2][2] = {
+    {1, 2},
+    {3, 4}
+  };
+
+  int B[2][2] = {
+      {5, 6},
+      {7, 8}
+  };
+
+  int C[2][2] = {0};   // Result matrix
+
+  int i, j, k;
+
+  for (i = 0; i < 2; i++)
+  {
+      for (j = 0; j < 2; j++)
+      {
+          C[i][j] = 0;
+          for (k = 0; k < 2; k++)
+          {
+              C[i][j] += A[i][k] * B[k][j];
+          }
+      }
+  }
+
+
 
   /* USER CODE END 1 */
 
@@ -181,9 +210,42 @@ int main(void)
 
     //-----------------------------------------------------------------
     //TASK3
-    myPrintf("Encrypted string: %s\r\n", encrypted);
-    myPrintf("Decrypted string: %s\r\n", decrypted);
-    /* USER CODE BEGIN 3 */
+    // myPrintf("Encrypted string: %s\r\n", encrypted);
+    // myPrintf("Decrypted string: %s\r\n", decrypted);
+    //-----------------------------------------------------------------
+    //TASK4
+    // /* USER CODE BEGIN 3 */
+    myPrintf("Matrix A:\r\n");
+    for (i = 0; i < 2; i++)
+    {
+        for (j = 0; j < 2; j++)
+        {
+            myPrintf("%d ", A[i][j]);
+        }
+        myPrintf("\r\n");
+    }
+
+    myPrintf("\r\nMatrix B:\r\n");
+    for (i = 0; i < 2; i++)
+    {
+        for (j = 0; j < 2; j++)
+        {
+            myPrintf("%d ", B[i][j]);
+        }
+        myPrintf("\r\n");
+    }
+
+    myPrintf("\r\nMatrix C (A × B):\r\n");
+    for (i = 0; i < 2; i++)
+    {
+        for (j = 0; j < 2; j++)
+        {
+            myPrintf("%d ", C[i][j]);
+        }
+        myPrintf("\r\n");
+    }
+    //task5
+
   }
   /* USER CODE END 3 */
 }
