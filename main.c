@@ -125,31 +125,37 @@ int main(void)
   // decrypted[i]='\0';
   //---------------------------------------
   //TASK4
-  int A[2][2] = {
-    {1, 2},
-    {3, 4}
-  };
+  // int A[2][2] = {
+  //   {1, 2},
+  //   {3, 4}
+  // };
 
-  int B[2][2] = {
-      {5, 6},
-      {7, 8}
-  };
+  // int B[2][2] = {
+  //     {5, 6},
+  //     {7, 8}
+  // };
 
-  int C[2][2] = {0};   // Result matrix
+  // int C[2][2] = {0};   // Result matrix
 
-  int i, j, k;
+  // int i, j, k;
 
-  for (i = 0; i < 2; i++)
-  {
-      for (j = 0; j < 2; j++)
-      {
-          C[i][j] = 0;
-          for (k = 0; k < 2; k++)
-          {
-              C[i][j] += A[i][k] * B[k][j];
-          }
-      }
-  }
+  // for (i = 0; i < 2; i++)
+  // {
+  //     for (j = 0; j < 2; j++)
+  //     {
+  //         C[i][j] = 0;
+  //         for (k = 0; k < 2; k++)
+  //         {
+  //             C[i][j] += A[i][k] * B[k][j];
+  //         }
+  //     }
+  // }
+  //---------------------------------------
+  //TASK5
+  int num, temp;
+  int digit1, digit2, digit3;
+  int sum;
+
 
 
 
@@ -215,36 +221,58 @@ int main(void)
     //-----------------------------------------------------------------
     //TASK4
     // /* USER CODE BEGIN 3 */
-    myPrintf("Matrix A:\r\n");
-    for (i = 0; i < 2; i++)
+    // myPrintf("Matrix A:\r\n");
+    // for (i = 0; i < 2; i++)
+    // {
+    //     for (j = 0; j < 2; j++)
+    //     {
+    //         myPrintf("%d ", A[i][j]);
+    //     }
+    //     myPrintf("\r\n");
+    // }
+
+    // myPrintf("\r\nMatrix B:\r\n");
+    // for (i = 0; i < 2; i++)
+    // {
+    //     for (j = 0; j < 2; j++)
+    //     {
+    //         myPrintf("%d ", B[i][j]);
+    //     }
+    //     myPrintf("\r\n");
+    // }
+
+    // myPrintf("\r\nMatrix C (A × B):\r\n");
+    // for (i = 0; i < 2; i++)
+    // {
+    //     for (j = 0; j < 2; j++)
+    //     {
+    //         myPrintf("%d ", C[i][j]);
+    //     }
+    //     myPrintf("\r\n");
+    // }
+    //-----------------------------------------------------------------
+    //TASK5
+    myPrintf("Armstrong numbers between 100 and 999:\r\n");
+    for(num=100; num<=999;num++)
     {
-        for (j = 0; j < 2; j++)
+        temp=num;
+
+        digit1=temp % 10;        //units
+        temp=temp /10;
+
+        digit2=temp%10;        //tens
+        temp=temp/ 10;
+
+        digit3=temp% 10;        //hundreds
+
+        sum=(digit1*digit1*digit1)+(digit2*digit2*digit2)+(digit3*digit3*digit3);
+
+        if(sum==num)
         {
-            myPrintf("%d ", A[i][j]);
+            myPrintf("%d\r\n",num);
         }
-        myPrintf("\r\n");
     }
 
-    myPrintf("\r\nMatrix B:\r\n");
-    for (i = 0; i < 2; i++)
-    {
-        for (j = 0; j < 2; j++)
-        {
-            myPrintf("%d ", B[i][j]);
-        }
-        myPrintf("\r\n");
-    }
-
-    myPrintf("\r\nMatrix C (A × B):\r\n");
-    for (i = 0; i < 2; i++)
-    {
-        for (j = 0; j < 2; j++)
-        {
-            myPrintf("%d ", C[i][j]);
-        }
-        myPrintf("\r\n");
-    }
-    //task5
 
   }
   /* USER CODE END 3 */
