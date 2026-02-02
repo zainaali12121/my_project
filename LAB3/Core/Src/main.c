@@ -100,7 +100,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
-
+//3 5 9 a f g
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -168,7 +168,7 @@ int main(void)
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_0 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_1 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_2 , GPIO_PIN_RESET );
-    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_4 , GPIO_PIN_RESET );
+    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_3 , GPIO_PIN_RESET ); //4
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_6 , GPIO_PIN_RESET );
 
     HAL_Delay(2000);
@@ -200,7 +200,7 @@ int main(void)
     //5
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_0 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_2 , GPIO_PIN_RESET );
-    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_4 , GPIO_PIN_RESET );
+    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_3 , GPIO_PIN_RESET ); //4
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_5 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_6 , GPIO_PIN_RESET );
 
@@ -270,7 +270,7 @@ int main(void)
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_0 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_1 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_2 , GPIO_PIN_RESET );
-    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_4 , GPIO_PIN_RESET );
+    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_3 , GPIO_PIN_RESET ); //4
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_5 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_6 , GPIO_PIN_RESET );
 
@@ -288,7 +288,7 @@ int main(void)
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_0 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_1 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_2 , GPIO_PIN_RESET );
-    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_3 , GPIO_PIN_RESET );
+    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_4 , GPIO_PIN_RESET ); //4
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_5 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_6 , GPIO_PIN_RESET );
 
@@ -374,7 +374,7 @@ int main(void)
 
     //F
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_0 , GPIO_PIN_RESET );
-    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_3 , GPIO_PIN_RESET );
+    HAL_GPIO_WritePin (GPIOD , GPIO_PIN_4 , GPIO_PIN_RESET ); //4
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_5 , GPIO_PIN_RESET );
     HAL_GPIO_WritePin (GPIOD , GPIO_PIN_6 , GPIO_PIN_RESET );
 
