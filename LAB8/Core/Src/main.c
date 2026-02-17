@@ -136,7 +136,7 @@ int main(void)
 
   uint8_t who_am_i;
 
-  char buffer[17];
+  char buffer[15];
   who_am_i = Gyro_Read(0x0F);
   sprintf(buffer, "WHO_AM_I = %u\r\n", who_am_i);
   HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
