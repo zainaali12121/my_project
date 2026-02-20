@@ -20,6 +20,15 @@
 #include <stdio.h>
 #include <string.h>
 #include "main.h"
+#define OUT_TEMP  0x26
+
+
+
+#define CTRL_REG1       0x20
+#define CTRL_REG1_VAL   0b00001111
+
+#define OUT_TEMP        0x26
+#define READ_CMD        0x80   // MSB = 1 for read
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -77,23 +86,91 @@ static void MX_USB_PCD_Init(void);
   * @retval int
   */
 
-  uint8_t Gyro_Read(uint8_t reg)
-  {
-    uint8_t tx_buffer;
-    uint8_t rx_buffer;
+  // uint8_t Gyro_Read(uint8_t reg)
+  // {
+  //   uint8_t tx_buffer;
+  //   uint8_t rx_buffer;
     
-    tx_buffer = 0x80 | reg; 
-    rx_buffer = 0;
-    HAL_GPIO_WritePin (GPIOE , CS_I2C_SPI_Pin , GPIO_PIN_RESET );
+  //   tx_buffer = 0x80 | reg; 
+  //   rx_buffer = 0;
+  //   HAL_GPIO_WritePin (GPIOE , CS_I2C_SPI_Pin , GPIO_PIN_RESET );
 
-    HAL_SPI_Transmit (& hspi1 , &tx_buffer , 1 , 100 );
-    HAL_SPI_Receive (& hspi1 , &rx_buffer , 1 , 100 );
+  //   HAL_SPI_Transmit (& hspi1 , &tx_buffer , 1 , 100 );
+  //   HAL_SPI_Receive (& hspi1 , &rx_buffer , 1 , 100 );
 
-    HAL_GPIO_WritePin (GPIOE , CS_I2C_SPI_Pin , GPIO_PIN_SET );
+  //   HAL_GPIO_WritePin (GPIOE , CS_I2C_SPI_Pin , GPIO_PIN_SET );
 
-    return rx_buffer;
-  }
+  //   return rx_buffer;
+  // }
 
+  
+uint8_t tx_buffer[2];
+uint8_t rx_buffer[1];
+
+int8_t temperature;
+char uart_msg[50];
+
+volatile uint8_t spi_state = 0;
+
+void gyro_init(void)
+{
+    uint8_t tx[2] = {CTRL_REG1, CTRL_REG1_VAL};
+
+    HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(&hspi1, tx, 2, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin, GPIO_PIN_SET);
+}
+
+void gyro_read_temperature(void)
+{
+    tx_buffer[0] = OUT_TEMP | READ_CMD;
+
+    HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin, GPIO_PIN_RESET);
+
+    spi_state = 1;
+
+    HAL_SPI_Transmit_IT(&hspi1, tx_buffer, 1);
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if (hspi->Instance == SPI1 && spi_state == 1)
+    {
+        spi_state = 2;
+        HAL_SPI_Receive_IT(&hspi1, rx_buffer, 1);
+    }
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if (hspi->Instance == SPI1 && spi_state == 2)
+    {
+        HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin, GPIO_PIN_SET);
+
+        temperature = (int8_t)rx_buffer[0]; // signed integer
+
+        char buffer[20];
+        sprintf(buffer, "%d\r\n", temperature);
+        HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+        spi_state = 0;
+    }
+}
+// void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+// {
+//     if (hspi->Instance == SPI1 && spi_state == 2)
+//     {
+//         HAL_GPIO_WritePin(GPIOE, CS_I2C_SPI_Pin, GPIO_PIN_SET);
+
+//         temperature = (int8_t)rx_buffer[0];
+
+//         char buffer[20];
+//         sprintf(buffer, "Temp = %d\r\n", temperature);
+//         HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+//         spi_state = 0;
+//     }
+// }
 int main(void)
 {
 
@@ -126,6 +203,8 @@ int main(void)
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
 
+  gyro_init();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -134,18 +213,19 @@ int main(void)
   //TASK 1
   //----------------------------------------------------
 
-  uint8_t who_am_i;
+  // uint8_t who_am_i;
 
-  char buffer[15];
-  who_am_i = Gyro_Read(0x0F);
-  sprintf(buffer, "WHO_AM_I = %u\r\n", who_am_i);
-  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+  // char buffer[15];
+  // who_am_i = Gyro_Read(0x0F);
+  // sprintf(buffer, "WHO_AM_I = %u\r\n", who_am_i);
+  // HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
 
 
   while (1)
   {
     /* USER CODE END WHILE */
-
+    gyro_read_temperature();
+    HAL_Delay(150); 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
