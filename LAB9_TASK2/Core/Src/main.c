@@ -75,7 +75,20 @@ static void MX_USART2_UART_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
+  #define CTRL_REG1      0x20
+  #define CTRL_REG1_VAL  0b10001111   // Power ON, enable X,Y,Z
 
+  #define CTRL_REG4      0x23
+  #define CTRL_REG4_VAL  0b00000000   // ±245 dps
+
+  #define OUT_TEMP       0x26
+
+  #define OUT_X_L        0x28
+  #define OUT_X_H        0x29
+  #define OUT_Y_L        0x2A
+  #define OUT_Y_H        0x2B
+  #define OUT_Z_L        0x2C
+  #define OUT_Z_H        0x2D
 
   int16_t acc_rawX, acc_rawY, acc_rawZ;
   float accX, accY, accZ;
@@ -128,70 +141,75 @@ static void MX_USART2_UART_Init(void);
 
     // Example: Accelerometer CTRL_REG1_A = 0x20
     data = 0x67; // 100 Hz, all axes enabled
-    HAL_I2C_Mem_Write(&hi2c1, (0x19 << 1), 0x20, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
+    HAL_I2C_Mem_Write(&hi2c1, 0x33, 0x20, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
 
     data = 0x00; // Example: CTRL_REG4_A = 0x23
-    HAL_I2C_Mem_Write(&hi2c1, (0x19 << 1), 0x23, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
+    HAL_I2C_Mem_Write(&hi2c1, 0x33, 0x23, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
   }
   //OLD ONE
-  // void Read_LSM(void)
-  // {
-  //   uint8_t data[6]; 
-  //   HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x28, I2C_MEMADD_SIZE_8BIT, data, 6, HAL_MAX_DELAY);
-  //   // Combine as signed 16-bit integers
-  //   int16_t x_raw = (int16_t)((data[1] << 8) | data[0]);
-  //   int16_t y_raw = (int16_t)((data[3] << 8) | data[2]);
-  //   int16_t z_raw = (int16_t)((data[5] << 8) | data[4]);
-
-  //   // Convert raw to acceleration in g (LSM303AGR = 3.9 mg/LSB)
-  //   float accX = (x_raw * 3.9f) / 1000.0f;
-  //   float accY = (y_raw * 3.9f) / 1000.0f;
-  //   float accZ = (z_raw * 3.9f) / 1000.0f;
-
-  //   // ---- Tilt calculation (radians first) ----
-  //   float roll_rad  = atan2(accY, accZ);
-  //   float pitch_rad = atan2(-accX, sqrt(accY*accY + accZ*accZ));
-
-  //   // Convert to degrees
-  //   roll_deg  = roll_rad  * 57.2958f;
-  //   pitch_deg = pitch_rad * 57.2958f;
-
-  //   // ---- Subtract offset AFTER conversion ----
-  //   roll_deg  -= offsetRoll;
-  //   pitch_deg -= offsetPitch;
-
-  // }
-
   void Read_LSM(void)
-{
+  {
     uint8_t data[6]; 
-    HAL_I2C_Mem_Read(&hi2c1, (0x19 << 1), 0x28 | 0x80, I2C_MEMADD_SIZE_8BIT, data, 6, HAL_MAX_DELAY);
-    // 0x28 | 0x80 to enable auto-increment
-
+    HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x28 | 0x80, I2C_MEMADD_SIZE_8BIT, data, 6, HAL_MAX_DELAY);
     // Combine as signed 16-bit integers
     int16_t x_raw = (int16_t)((data[1] << 8) | data[0]);
     int16_t y_raw = (int16_t)((data[3] << 8) | data[2]);
     int16_t z_raw = (int16_t)((data[5] << 8) | data[4]);
 
-    // Convert raw to acceleration in g (3.9 mg/LSB)
-    accX = (x_raw * 3.9f) / 1000.0f;
-    accY = (y_raw * 3.9f) / 1000.0f;
-    accZ = (z_raw * 3.9f) / 1000.0f;
+    // Convert raw to acceleration in g (LSM303AGR = 3.9 mg/LSB)
+    float accX = (x_raw * 3.9f) / 1000.0f;
+    float accY = (y_raw * 3.9f) / 1000.0f;
+    float accZ = (z_raw * 3.9f) / 1000.0f;
 
-    // Tilt calculation
+    // ---- Tilt calculation (radians first) ----
     float roll_rad  = atan2(accY, accZ);
     float pitch_rad = atan2(-accX, sqrt(accY*accY + accZ*accZ));
 
-    roll_deg  = roll_rad  * 57.2958f - offsetRoll;
-    pitch_deg = pitch_rad * 57.2958f - offsetPitch;
-}
+    // Convert to degrees
+    roll_deg  = roll_rad  * 57.2958f;
+    pitch_deg = pitch_rad * 57.2958f;
 
-  void Print_LSM(void)
-  {
-    char buffer[50];
-    sprintf(buffer, "%.2f,%.2f\r\n", roll_deg, pitch_deg);
-    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+    // ---- Subtract offset AFTER conversion ----
+    roll_deg  -= offsetRoll;
+    pitch_deg -= offsetPitch;
+
   }
+
+
+
+ void Print_LSM(void)
+{
+    char buffer[120];
+
+    float gx, gy, gz;
+
+    // Read accelerometer (updates accX, accY, accZ)
+    Read_LSM();
+
+    // Read gyroscope
+    int16_t gx_raw = (int16_t)((gyro_read(OUT_X_H) << 8) | gyro_read(OUT_X_L));
+    int16_t gy_raw = (int16_t)((gyro_read(OUT_Y_H) << 8) | gyro_read(OUT_Y_L));
+    int16_t gz_raw = (int16_t)((gyro_read(OUT_Z_H) << 8) | gyro_read(OUT_Z_L));
+
+    gx = gx_raw * 0.00875f - offsetGyroX;
+    gy = gy_raw * 0.00875f - offsetGyroY;
+    gz = gz_raw * 0.00875f - offsetGyroZ;
+  
+    
+    sprintf(buffer,
+            "Accelerometer:\r\n"
+            "%0.3f\r\n"
+            "%0.3f\r\n"
+            "%0.3f\r\n"
+            "Gyroscope:\r\n"
+            "%0.3f\r\n"
+            "%0.3f\r\n"
+            "%0.3f\r\n\r\n",
+            accX, accY, accZ,
+            gx, gy, gz);
+
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+}
 
   void OffsetLSM(void)
   {
