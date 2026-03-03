@@ -90,6 +90,22 @@ static void MX_USART2_UART_Init(void);
   #define OUT_Z_L        0x2C
   #define OUT_Z_H        0x2D
 
+  typedef struct {
+    float accX;
+    float accY;
+    float accZ;
+
+    float gyroX;
+    float gyroY;
+    float gyroZ;
+
+    float roll;
+    float pitch;
+  } LSM_Offset_t;
+
+
+  LSM_Offset_t lsmOffset;
+
   int16_t acc_rawX, acc_rawY, acc_rawZ;
   float accX, accY, accZ;
   float offsetAccX = 0;
@@ -146,44 +162,38 @@ static void MX_USART2_UART_Init(void);
     data = 0x00; // Example: CTRL_REG4_A = 0x23
     HAL_I2C_Mem_Write(&hi2c1, 0x33, 0x23, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
   }
-  //OLD ONE
-  void Read_LSM(void)
-  {
-    uint8_t data[6]; 
+  
+
+void Read_LSM(void)
+{
+    uint8_t data[6];
     HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x28 | 0x80, I2C_MEMADD_SIZE_8BIT, data, 6, HAL_MAX_DELAY);
-    // Combine as signed 16-bit integers
-    int16_t x_raw = (int16_t)((data[1] << 8) | data[0]);
-    int16_t y_raw = (int16_t)((data[3] << 8) | data[2]);
-    int16_t z_raw = (int16_t)((data[5] << 8) | data[4]);
 
-    // Convert raw to acceleration in g (LSM303AGR = 3.9 mg/LSB)
-    float accX = (x_raw * 3.9f) / 1000.0f;
-    float accY = (y_raw * 3.9f) / 1000.0f;
-    float accZ = (z_raw * 3.9f) / 1000.0f;
+    // Combine high and low bytes
+    acc_rawX = (int16_t)((data[1] << 8) | data[0]);
+    acc_rawY = (int16_t)((data[3] << 8) | data[2]);
+    acc_rawZ = (int16_t)((data[5] << 8) | data[4]);
 
-    // ---- Tilt calculation (radians first) ----
-    float roll_rad  = atan2(accY, accZ);
-    float pitch_rad = atan2(-accX, sqrt(accY*accY + accZ*accZ));
+    // Scale and subtract offsets
+    accX = acc_rawX * 3.9f / 1000.0f - lsmOffset.accX;
+    accY = acc_rawY * 3.9f / 1000.0f - lsmOffset.accY;
+    accZ = acc_rawZ * 3.9f / 1000.0f - lsmOffset.accZ;
 
-    // Convert to degrees
-    roll_deg  = roll_rad  * 57.2958f;
-    pitch_deg = pitch_rad * 57.2958f;
+    // Compute roll and pitch in degrees
+    roll_deg  = atan2f(accY, accZ) * 57.2958f - offsetRoll;
+    pitch_deg = atan2f(-accX, sqrtf(accY * accY + accZ * accZ)) * 57.2958f - offsetPitch;
+}
 
-    // ---- Subtract offset AFTER conversion ----
-    roll_deg  -= offsetRoll;
-    pitch_deg -= offsetPitch;
-
-  }
 
 
 
  void Print_LSM(void)
 {
-    char buffer[120];
+    char buffer[25];
 
     float gx, gy, gz;
 
-    // Read accelerometer (updates accX, accY, accZ)
+    // Read accelerometer (updates accX, accY, accZ, roll_deg, pitch_deg)
     Read_LSM();
 
     // Read gyroscope
@@ -194,67 +204,90 @@ static void MX_USART2_UART_Init(void);
     gx = gx_raw * 0.00875f - offsetGyroX;
     gy = gy_raw * 0.00875f - offsetGyroY;
     gz = gz_raw * 0.00875f - offsetGyroZ;
-  
-    
-    sprintf(buffer,
-            "Accelerometer:\r\n"
-            "%0.3f\r\n"
-            "%0.3f\r\n"
-            "%0.3f\r\n"
-            "Gyroscope:\r\n"
-            "%0.3f\r\n"
-            "%0.3f\r\n"
-            "%0.3f\r\n\r\n",
-            accX, accY, accZ,
-            gx, gy, gz);
 
+
+    
+
+    // Accelerometer
+    sprintf(buffer, "Acc X: %0.3f g\r\n", accX);
     HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    sprintf(buffer, "Acc Y: %0.3f g\r\n", accY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    sprintf(buffer, "Acc Z: %0.3f g\r\n", accZ);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    //Roll & Pitch
+    sprintf(buffer, "Roll: %0.2f deg\r\n", roll_deg);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    sprintf(buffer, "Pitch: %0.2f deg\r\n", pitch_deg);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    //Gyroscope
+    sprintf(buffer, "Gyro X: %0.3f dps\r\n", gx);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    sprintf(buffer, "Gyro Y: %0.3f dps\r\n", gy);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    sprintf(buffer, "Gyro Z: %0.3f dps\r\n", gz);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+        // // Format output
+        // sprintf(buffer,
+        //         "Accelerometer [g]:\r\nX:%0.3f Y:%0.3f Z:%0.3f\r\n"
+        //         "Roll [deg]: %0.2f  Pitch [deg]: %0.2f\r\n"
+        //         "Gyroscope [dps]:\r\nX:%0.3f Y:%0.3f Z:%0.3f\r\n\r\n",
+        //         accX, accY, accZ,
+        //         roll_deg, pitch_deg,
+        //         gx, gy, gz);
+
+        // HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+
+
 }
 
   void OffsetLSM(void)
-  {
-float sumRoll = 0;
-    float sumPitch = 0;
-
-    float sumGyroX = 0;
-    float sumGyroY = 0;
-    float sumGyroZ = 0;
-
+{
+    float sumAccX = 0, sumAccY = 0, sumAccZ = 0;
+    float sumGyroX = 0, sumGyroY = 0, sumGyroZ = 0;
     int samples = 20;
 
     for(int i = 0; i < samples; i++)
     {
-        // ---- Accelerometer tilt ----
-        Read_LSM();
+        // Read raw accelerometer
+        uint8_t data[6];
+        HAL_I2C_Mem_Read(&hi2c1, 0x33, 0x28 | 0x80, I2C_MEMADD_SIZE_8BIT, data, 6, HAL_MAX_DELAY);
+        int16_t rawX = (int16_t)((data[1] << 8) | data[0]);
+        int16_t rawY = (int16_t)((data[3] << 8) | data[2]);
+        int16_t rawZ = (int16_t)((data[5] << 8) | data[4]);
 
-        sumRoll += roll_deg;
-        sumPitch += pitch_deg;
+        sumAccX += rawX * 3.9f / 1000.0f;
+        sumAccY += rawY * 3.9f / 1000.0f;
+        sumAccZ += rawZ * 3.9f / 1000.0f;
 
-        // ---- Gyroscope raw read ----
+        // Read raw gyro
         int16_t gx_raw = (int16_t)((gyro_read(OUT_X_H) << 8) | gyro_read(OUT_X_L));
         int16_t gy_raw = (int16_t)((gyro_read(OUT_Y_H) << 8) | gyro_read(OUT_Y_L));
         int16_t gz_raw = (int16_t)((gyro_read(OUT_Z_H) << 8) | gyro_read(OUT_Z_L));
 
-        // Scale (L3GD20 default 250 dps = 8.75 mdps/LSB)
-        float gx = gx_raw * 0.00875f;
-        float gy = gy_raw * 0.00875f;
-        float gz = gz_raw * 0.00875f;
-
-        sumGyroX += gx;
-        sumGyroY += gy;
-        sumGyroZ += gz;
+        sumGyroX += gx_raw * 0.00875f;
+        sumGyroY += gy_raw * 0.00875f;
+        sumGyroZ += gz_raw * 0.00875f;
 
         HAL_Delay(50);
     }
 
-    // ---- Average offsets ----
-    offsetRoll  = sumRoll  / samples;
-    offsetPitch = sumPitch / samples;
+    // Store averages in struct
+    lsmOffset.accX = sumAccX / samples;
+    lsmOffset.accY = sumAccY / samples;
+    lsmOffset.accZ = sumAccZ / samples;
 
-    offsetGyroX = sumGyroX / samples;
-    offsetGyroY = sumGyroY / samples;
-    offsetGyroZ = sumGyroZ / samples;
-  }
+    lsmOffset.gyroX = sumGyroX / samples;
+    lsmOffset.gyroY = sumGyroY / samples;
+    lsmOffset.gyroZ = sumGyroZ / samples;
+}
 int main(void)
 {
 
@@ -300,7 +333,7 @@ int main(void)
     /* USER CODE END WHILE */
     Read_LSM();
     Print_LSM();
-    HAL_Delay(100);
+    //HAL_Delay(100);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
