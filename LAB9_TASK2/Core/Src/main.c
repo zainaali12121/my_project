@@ -288,6 +288,14 @@ void Read_LSM(void)
     lsmOffset.gyroY = sumGyroY / samples;
     lsmOffset.gyroZ = sumGyroZ / samples;
 }
+
+void UART_PrintRaw(const char* label, int16_t rawValue)
+{
+    char buffer[50];
+    sprintf(buffer, "%s: %d\r\n", label, rawValue);
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+}
+
 int main(void)
 {
 
@@ -332,7 +340,11 @@ int main(void)
   {
     /* USER CODE END WHILE */
     Read_LSM();
-    Print_LSM();
+    /* USER CODE BEGIN 3 */
+  UART_PrintRaw("Acc Raw X", acc_rawX);
+    UART_PrintRaw("Acc Raw Y", acc_rawY);
+    UART_PrintRaw("Acc Raw Z", acc_rawZ);
+/* USER CODE END 3 */
     //HAL_Delay(100);
     /* USER CODE BEGIN 3 */
   }
